@@ -2764,6 +2764,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef482f1b5c4190c43950e0ad5fdade8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Cubes: []
 --- !u!1 &436242352
 GameObject:
   m_ObjectHideFlags: 0
@@ -2828,6 +2829,8 @@ MonoBehaviour:
   Camera: {fileID: 963194225}
   SelectReferencePosition: {fileID: 1252485000}
   swipeThreshold: 0
+  swipeSpeed: 2
+  rotationIncrement: 90
 --- !u!4 &536635744
 Transform:
   m_ObjectHideFlags: 0
@@ -2889,6 +2892,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef482f1b5c4190c43950e0ad5fdade8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Cubes: []
 --- !u!1 &560190647
 GameObject:
   m_ObjectHideFlags: 0
@@ -3756,6 +3760,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef482f1b5c4190c43950e0ad5fdade8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Cubes: []
 --- !u!1 &935358073
 GameObject:
   m_ObjectHideFlags: 0
@@ -4190,6 +4195,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef482f1b5c4190c43950e0ad5fdade8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Cubes: []
 --- !u!1 &1153758955
 GameObject:
   m_ObjectHideFlags: 0
@@ -4401,8 +4407,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1252484999}
-  m_LocalRotation: {x: -0.23911765, y: 0.3696438, z: -0.09904577, w: 0.89239913}
-  m_LocalPosition: {x: -0.1800003, y: -0.059999824, z: 4.47}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 963194228}
@@ -4420,6 +4426,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef482f1b5c4190c43950e0ad5fdade8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Cubes: []
 --- !u!1 &1252988772
 GameObject:
   m_ObjectHideFlags: 0
@@ -4467,6 +4474,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef482f1b5c4190c43950e0ad5fdade8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Cubes: []
 --- !u!1 &1269165710
 GameObject:
   m_ObjectHideFlags: 0
@@ -4514,6 +4522,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef482f1b5c4190c43950e0ad5fdade8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Cubes: []
 --- !u!1 &1293203319
 GameObject:
   m_ObjectHideFlags: 0
@@ -5307,6 +5316,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef482f1b5c4190c43950e0ad5fdade8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Cubes:
+  - {fileID: 170721076}
+  - {fileID: 1985890937}
+  - {fileID: 253288032}
 --- !u!1 &1825518285
 GameObject:
   m_ObjectHideFlags: 0
