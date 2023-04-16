@@ -8,7 +8,7 @@ using static UnityEditor.Experimental.GraphView.GraphView;
 public class PlayerManager : MonoBehaviour
 {
     public GameObject TestObject;
-    public GameObject Camera;
+    public GameObject MainCamera;
 
     [Header("Select Object Handler")]
     public Transform SelectReferencePosition;
@@ -44,6 +44,11 @@ public class PlayerManager : MonoBehaviour
             Rotating = true;
         }
         RotationUpdate(x,y);
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            RaycastHit hit = CastRay();
+        }
     }
 
     //Select a piece and bring it in front of the screen
@@ -85,5 +90,57 @@ public class PlayerManager : MonoBehaviour
     void RotationSnap()
     {
         //transform.eulerAngles = new Vector3(transform.eulerAngles.x, (Mathf.Round(transform.eulerAngles.y / increment) * increment), transform.eulerAngles.z);
+    }
+
+    IEnumerator FlashScreen()
+    {
+        float duration = 0.2f; 
+        float t = 0f;
+        while (t < duration) {
+            Camera.main.backgroundColor = Color.red;
+            yield return null;
+            t += Time.deltaTime;
+        }
+        Camera.main.backgroundColor = Color.white; 
+    }
+
+    RaycastHit CastRay()
+    {   
+        RaycastHit hit;
+        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit))
+        {
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
+            Debug.Log("Did Hit");
+        // check collider near the ray cast cus 
+        float sphereRadius = 0.2f;
+        Collider[] hitColliders = Physics.OverlapSphere(hit.point, sphereRadius);
+        if (hitColliders.Length > 0)
+        {
+            // closest point outside of an obstacle
+            Vector3 closestPoint = hit.point;   
+            float minDistance = float.MaxValue;
+            foreach (Collider collider in hitColliders)
+            {
+                Vector3 closest = collider.ClosestPoint(hit.point);
+                float distance = Vector3.Distance(hit.point, closest);
+                if (distance < minDistance)
+                {
+                    closestPoint = closest;
+                    minDistance = distance;
+                }
+            }
+            TestObject.transform.localScale = new Vector3(1f,1f,1f);
+            closestPoint = new Vector3(Mathf.Round(closestPoint.x), Mathf.Round(closestPoint.y), Mathf.Round(closestPoint.z));
+            TestObject.transform.position = closestPoint;
+            StartCoroutine(FlashScreen()); // flash screen
+        }
+        else
+        {
+            Vector3 snappedPoint = new Vector3(Mathf.Round(hit.point.x), Mathf.Round(hit.point.y), Mathf.Round(hit.point.z));
+            TestObject.transform.position = snappedPoint;
+        }
+    
+        }
+        return hit;
     }
 }
