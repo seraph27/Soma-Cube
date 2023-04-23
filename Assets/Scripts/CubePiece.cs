@@ -3,35 +3,48 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using ControlFreak2;
+using System.Net;
 
 public class CubePiece : MonoBehaviour
 {
     public GameObject[] Cubes;
 
+    public Vector3 midPoint;
+
+    public Vector3 GetMidPoint()
+    {
+        //Gets the middle point of a piece, used for rotation
+        Vector3 newpoint = Vector3.zero;
+        foreach (GameObject cube in Cubes)
+        {
+            newpoint += cube.transform.position;
+        }
+        newpoint /= Cubes.Length;
+        return newpoint;
+    }
+    /*
     // Start is called before the first frame update
     public void AdjustPivotToMidPoint()
     {
-        Vector3 midPoint = Vector3.zero;
-        Vector3 iniPos = transform.position;
+        fromPoint = transform.position;
 
         //Gets the middle point of a piece, used for rotation
         foreach (GameObject cube in Cubes)
         {
-            midPoint += cube.transform.position;
+            newPoint += cube.transform.position;
         }
-        midPoint /= Cubes.Length;
+        newPoint /= Cubes.Length;
 
-        transform.position = midPoint;
+        transform.position = newPoint;
 
 
-        Vector3 cubeShiftPos = iniPos - midPoint;
+        Vector3 cubeShiftPos = fromPoint - newPoint;
         foreach (GameObject cube in Cubes)
         {
             cube.transform.position += cubeShiftPos;
         }
     }
-
-    // Update is called once per frame
+    */
     void Update()
     {
       
