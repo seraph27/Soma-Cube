@@ -74,6 +74,7 @@ public class PlayerManager : MonoBehaviour
     //Select a piece and bring it in front of the screen, Rotation mode
     void SelectPiece(GameObject PieceSelected)
     {
+        Moving = false;
         RotationButtons.SetActive(true);
 
         PieceSelected.transform.position = SelectReferencePosition.position;
@@ -81,6 +82,7 @@ public class PlayerManager : MonoBehaviour
         SelectingPiece = true;
 
         piece = currentPiece.GetComponent<CubePiece>();
+        currentPiece.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
 
         SetLayerRecursively(currentPiece, 2);
 
@@ -140,6 +142,8 @@ public class PlayerManager : MonoBehaviour
     //Go from rotation to move mode
     public void MovePiece()
     {
+        currentPiece.transform.localScale = new Vector3(1f, 1f, 1f);
+
         Rotating = false;
         Moving = true;
         RotationButtons.SetActive(false);
@@ -168,37 +172,6 @@ public class PlayerManager : MonoBehaviour
                 currentPiece.transform.position = roundedPosition;
             }
 
-        }
-    }
-
-    public void DragPiece()
-    {   
-        RaycastHit hit;
-        if (Physics.Raycast(Camera.main.ScreenPointToRay(CF2Input.mousePosition), out hit))
-        {
-            /*
-        // check collider near the ray cast cus 
-        float sphereRadius = 0.2f;
-        Collider[] hitColliders = Physics.OverlapSphere(hit.point, sphereRadius);
-        if (hitColliders.Length > 0)
-        {
-            // closest point outside of an obstacle
-            Vector3 closestPoint = hit.point;   
-            float minDistance = float.MaxValue;
-            foreach (Collider collider in hitColliders)
-            {
-                Vector3 closest = collider.ClosestPoint(hit.point);
-                float distance = Vector3.Distance(hit.point, closest);
-                if (distance < minDistance)
-                {
-                    closestPoint = closest;
-                    minDistance = distance;
-                }
-            }
-            */
-            TestObject.transform.localScale = new Vector3(1f,1f,1f);
-            Vector3 newPoint = new Vector3(Mathf.Round(hit.point.x), Mathf.Round(hit.point.y), Mathf.Round(hit.point.z));
-            TestObject.transform.position = newPoint;
         }
     }
 
