@@ -160,7 +160,7 @@ public class PlayerManager : MonoBehaviour
             {
                 midPoint = piece.GetMidPoint();
                 Vector3 offset = midPoint - currentPiece.transform.position;
-                currentPiece.transform.position = hit.point - offset;
+                currentPiece.transform.position = hit.point - offset + Vector3.up * 0.5f;
 
                 // Round the position to the nearest integer
                 Vector3 roundedPosition = new Vector3(
