@@ -7,9 +7,16 @@ using System.Net;
 
 public class CubePiece : MonoBehaviour
 {
+
     public GameObject[] Cubes;
 
     public Vector3 midPoint;
+
+    public bool IsMoving;
+
+    GameObject clone;
+
+    PlayerManager playerManager;
 
     public Vector3 GetMidPoint()
     {
@@ -45,8 +52,53 @@ public class CubePiece : MonoBehaviour
         }
     }
     */
+
+
+    private void Start()
+    {
+        playerManager = FindObjectOfType<PlayerManager>();
+        CreateClone();
+    }
+    void CreateClone()
+    {
+        clone = Instantiate(gameObject);
+        Destroy(clone.GetComponent<CubePiece>()); //Remove the cubepiece component for the clone so it doesnt clone itself infintely
+        SetLayerRecursively(clone, 2);
+
+    }
     void Update()
     {
-      
+        clone.SetActive(false);
+
+        if (IsMoving)
+        {
+            clone.SetActive(true);
+
+            float minDistance = 50f;
+            foreach (GameObject cube in Cubes)
+            {
+                RaycastHit hit;
+                Physics.Raycast(cube.transform.position, -Vector3.up, out hit, Mathf.Infinity, playerManager.raycastLayer);
+                if(hit.collider != null)
+                {
+                    minDistance = Mathf.Min(minDistance,(hit.point - cube.transform.position).magnitude);
+                }
+            }
+
+            clone.transform.position = transform.position + -Vector3.up * minDistance + new Vector3(0,0.5f,0); 
+            clone.transform.rotation = transform.rotation;
+        }
+    }
+
+
+
+    void SetLayerRecursively(GameObject obj, int newLayer)
+    {
+        obj.layer = newLayer;
+
+        foreach (Transform child in obj.transform)
+        {
+            SetLayerRecursively(child.gameObject, newLayer);
+        }
     }
 }

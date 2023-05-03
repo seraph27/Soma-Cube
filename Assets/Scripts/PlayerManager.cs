@@ -1,9 +1,8 @@
-using ControlFreak2;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
+using ControlFreak2;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -27,7 +26,7 @@ public class PlayerManager : MonoBehaviour
     bool Moving;
 
     GameObject currentPiece;
-    CubePiece piece;
+    CubePiece currentPieceComponent;
 
     Vector3 midPoint;
     Quaternion snapRotation;
@@ -45,10 +44,6 @@ public class PlayerManager : MonoBehaviour
         float x = CF2Input.GetAxis("Mouse X");
         float y = CF2Input.GetAxis("Mouse Y");
 
-        if (CF2Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            SelectPiece(TestObject);
-        }
 
 
         if(Mathf.Abs(x) > swipeThreshold || Mathf.Abs(y) > swipeThreshold)
@@ -62,18 +57,24 @@ public class PlayerManager : MonoBehaviour
         }
         RotationUpdate(x,y);
 
-        bool moveInput = CF2Input.GetButtonDown("Fire1");
-        if(moveInput)
+
+        //for testing
+        if (CF2Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            SelectPiece(TestObject);
+        }
+        if (CF2Input.GetButtonDown("Fire1"))
         {
             MovePiece(); //Stop rotationmode and go to move mode
         }
+        
         MoveUpdate();
         
     }
 
     //Select a piece and bring it in front of the screen, Rotation mode
-    void SelectPiece(GameObject PieceSelected)
-    {
+    public void SelectPiece(GameObject PieceSelected)
+    {        
         Moving = false;
         RotationButtons.SetActive(true);
 
@@ -81,8 +82,9 @@ public class PlayerManager : MonoBehaviour
         currentPiece = PieceSelected;
         SelectingPiece = true;
 
-        piece = currentPiece.GetComponent<CubePiece>();
+        currentPieceComponent = currentPiece.GetComponent<CubePiece>();
         currentPiece.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+        currentPieceComponent.IsMoving = false;
 
         SetLayerRecursively(currentPiece, 2);
 
@@ -117,9 +119,9 @@ public class PlayerManager : MonoBehaviour
             {
                 //Lerp Piece to closest rotation snap
                 currentPiece.transform.rotation = Quaternion.Lerp(currentPiece.transform.rotation, snapRotation, 10f * Time.deltaTime);
-                midPoint = piece.GetMidPoint();
+                midPoint = currentPieceComponent.GetMidPoint();
                 Vector3 moveVec = SelectReferencePosition.transform.position - midPoint;
-                piece.transform.position += moveVec;
+                currentPieceComponent.transform.position += moveVec;
             }
         }
     }
@@ -143,6 +145,7 @@ public class PlayerManager : MonoBehaviour
     public void MovePiece()
     {
         currentPiece.transform.localScale = new Vector3(1f, 1f, 1f);
+        currentPieceComponent.IsMoving = true;
 
         Rotating = false;
         Moving = true;
@@ -151,16 +154,16 @@ public class PlayerManager : MonoBehaviour
 
     void MoveUpdate()
     {
-        if (Moving)
+        if (Moving) //MOVING THE OBJECT OUT OF VIEW OF THE CAMERA WITH AN OFFSET, FOR PIECE TO RAYCAST DOWN AND MOVE THE CLONE PIECE
         {
             Vector3 mouse = Input.mousePosition;
             Ray castPoint = Camera.main.ScreenPointToRay(mouse);
             RaycastHit hit;
             if (Physics.Raycast(castPoint, out hit, Mathf.Infinity,raycastLayer))
             {
-                midPoint = piece.GetMidPoint();
+                midPoint = currentPieceComponent.GetMidPoint();
                 Vector3 offset = midPoint - currentPiece.transform.position;
-                currentPiece.transform.position = hit.point - offset + Vector3.up * 0.5f;
+                currentPiece.transform.position = hit.point - offset + Vector3.up * 10f;
 
                 // Round the position to the nearest integer
                 Vector3 roundedPosition = new Vector3(
