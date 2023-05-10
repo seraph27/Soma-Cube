@@ -7,10 +7,18 @@ using ControlFreak2;
 public class PlayerManager : MonoBehaviour
 {
     public GameObject TestObject;
+    public GameObject TestObject2;
+    public GameObject TestObject3;
+
+
     public GameObject MainCamera;
 
     [Header("Button UI")]
     public GameObject RotationButtons;
+
+    [Header("Grid")]
+    public GameObject Grid;
+    public GameObject GridMiddle;
 
     [Header("Select Object Handler")]
     public LayerMask raycastLayer;
@@ -23,7 +31,9 @@ public class PlayerManager : MonoBehaviour
 
     bool SelectingPiece;
     bool Rotating;
-    bool Moving;
+
+    bool RotateMode;
+    bool MoveMode;
 
     GameObject currentPiece;
     CubePiece currentPieceComponent;
@@ -63,20 +73,64 @@ public class PlayerManager : MonoBehaviour
         {
             SelectPiece(TestObject);
         }
-        if (CF2Input.GetButtonDown("Fire1"))
+        if (CF2Input.GetKeyDown(KeyCode.Alpha2))
         {
-            MovePiece(); //Stop rotationmode and go to move mode
+            SelectPiece(TestObject2);
+        }
+        if (CF2Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            SelectPiece(TestObject3);
+        }
+
+        if (CF2Input.GetKeyDown(KeyCode.R))
+        {
+            ResetAllPieces();
+        }
+        if (CF2Input.GetKeyDown(KeyCode.Q))
+        {
+            GridRotateLeft();
+        }
+        if (CF2Input.GetKeyDown(KeyCode.W))
+        {
+            GridRotateRight();
+        }
+        if (CF2Input.GetKeyDown(KeyCode.E))
+        {
+            if (RotateMode)
+            {
+                Debug.Log("MoveMode");
+                MovePiece(); //Stop rotationmode and go to move mode
+            }
+            else if(MoveMode)
+            {
+                PlacePiece();
+            }
         }
         
         MoveUpdate();
         
     }
 
+
+    void ResetAllPieces()
+    {
+        ResetPiece();
+        RotateMode = false;
+        MoveMode = false;
+        TestObject.transform.position = new Vector3(0, -5, 0);
+        TestObject2.transform.position = new Vector3(0, -5, 0);
+        TestObject3.transform.position = new Vector3(0, -5, 0);
+    }
     //Select a piece and bring it in front of the screen, Rotation mode
     public void SelectPiece(GameObject PieceSelected)
-    {        
-        Moving = false;
+    {
+        ResetPiece();
+
+        MoveMode = false;
+        RotateMode = true;
+
         RotationButtons.SetActive(true);
+
 
         PieceSelected.transform.position = SelectReferencePosition.position;
         currentPiece = PieceSelected;
@@ -90,14 +144,46 @@ public class PlayerManager : MonoBehaviour
 
         RotationSnap();
     }
-    void UnselectPiece()
+    void PlacePiece() //Or unselect
     {
-        SetLayerRecursively(currentPiece,0);
+        RotateMode = false;
+        MoveMode = false;
+        if (currentPieceComponent != null)
+        {
+            currentPieceComponent.PlacePiece();
+            SetLayerRecursively(currentPiece, 0);
+        }
+
+        currentPieceComponent = null;
         currentPiece = null;
         SelectingPiece = false;
     }
+    void CancelRotatePiece() //reset piece if currently in rotation mode and switching to another piece
+    {
+        RotateMode = false;
+        MoveMode = false;
+        currentPiece.transform.position = new Vector3(0, -5, 0);
+        currentPiece.transform.localScale = new Vector3(1f,1f,1f);
+        currentPieceComponent = null;
+        SelectingPiece = false;
 
+    }
+    //check if theres currently a piece being selected in either move or rotate mode
 
+    void ResetPiece()
+    {
+        if (currentPiece != null)
+        {
+            if (RotateMode)
+            {
+                CancelRotatePiece();
+            }
+            if (MoveMode)
+            {
+                PlacePiece();
+            }
+        }
+    }
 
 
 
@@ -111,7 +197,7 @@ public class PlayerManager : MonoBehaviour
                 currentPiece.transform.RotateAround(SelectReferencePosition.transform.position, -transform.up, rotationX * swipeSpeed);
                 currentPiece.transform.RotateAround(SelectReferencePosition.transform.position, transform.right, rotationY * swipeSpeed);
             }
-            else if(Moving)
+            else if(MoveMode)
             {
                 currentPiece.transform.rotation = snapRotation;
             }
@@ -145,16 +231,17 @@ public class PlayerManager : MonoBehaviour
     public void MovePiece()
     {
         currentPiece.transform.localScale = new Vector3(1f, 1f, 1f);
-        currentPieceComponent.IsMoving = true;
+        currentPieceComponent.MovePiece();
 
         Rotating = false;
-        Moving = true;
+        RotateMode = false;
+        MoveMode = true;
         RotationButtons.SetActive(false);
     }
 
     void MoveUpdate()
     {
-        if (Moving) //MOVING THE OBJECT OUT OF VIEW OF THE CAMERA WITH AN OFFSET, FOR PIECE TO RAYCAST DOWN AND MOVE THE CLONE PIECE
+        if (MoveMode) //MOVING THE OBJECT OUT OF VIEW OF THE CAMERA WITH AN OFFSET, FOR PIECE TO RAYCAST DOWN AND MOVE THE CLONE PIECE
         {
             Vector3 mouse = Input.mousePosition;
             Ray castPoint = Camera.main.ScreenPointToRay(mouse);
@@ -186,5 +273,16 @@ public class PlayerManager : MonoBehaviour
         {
             SetLayerRecursively(child.gameObject, newLayer);
         }
+    }
+
+
+    public void GridRotateLeft()
+    {
+        Grid.transform.RotateAround(GridMiddle.transform.position, transform.up, -90f);
+    }
+
+    public void GridRotateRight()
+    {
+        Grid.transform.RotateAround(GridMiddle.transform.position, transform.up, 90f);
     }
 }

@@ -8,7 +8,7 @@ using System.Net;
 public class CubePiece : MonoBehaviour
 {
 
-    public GameObject[] Cubes;
+    List<GameObject> Cubes = new List<GameObject>();
 
     public Vector3 midPoint;
 
@@ -26,7 +26,7 @@ public class CubePiece : MonoBehaviour
         {
             newpoint += cube.transform.position;
         }
-        newpoint /= Cubes.Length;
+        newpoint /= Cubes.Count;
         return newpoint;
     }
     /*
@@ -56,9 +56,22 @@ public class CubePiece : MonoBehaviour
 
     private void Start()
     {
+        
         playerManager = FindObjectOfType<PlayerManager>();
+
+        SetCubes();
         CreateClone();
     }
+
+    public void SetCubes()
+    {
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            Cubes.Add(child.gameObject);
+        }
+    }
+
     void CreateClone()
     {
         clone = Instantiate(gameObject);
@@ -66,7 +79,7 @@ public class CubePiece : MonoBehaviour
         SetLayerRecursively(clone, 2);
 
     }
-    void Update()
+    void LateUpdate()
     {
         clone.SetActive(false);
 
@@ -91,6 +104,15 @@ public class CubePiece : MonoBehaviour
     }
 
 
+    public void MovePiece()
+    {
+        IsMoving = true;
+    }
+    public void PlacePiece()
+    {
+        transform.position = clone.transform.position;
+        IsMoving = false;
+    }
 
     void SetLayerRecursively(GameObject obj, int newLayer)
     {
