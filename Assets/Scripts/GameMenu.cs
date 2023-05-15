@@ -13,8 +13,10 @@ public class GameMenu : MonoBehaviour
     public GameObject settingsCanvas;
     public Text settingsGUI;
     public Text menuGUI;
+    PlayerManager playerController;
 
     private void Start() {
+        playerController = GameObject.Find("Player").GetComponent<PlayerManager>();
         settingsCanvas.SetActive(false);
         hintIcon.SetActive(true);
         restartIcon.SetActive(true);
@@ -47,8 +49,7 @@ public class GameMenu : MonoBehaviour
     }
 
     public void UseHint(){
-        Debug.Log("Hint used"); 
-        //
+        playerController.IsInGrid();
     }
 
     public void GoToMenu(){
@@ -56,6 +57,6 @@ public class GameMenu : MonoBehaviour
     }
 
     public void Restart(){
-        Debug.Log("Restarted Puzzle");
+        playerController.ResetAllPieces();
     }
 }

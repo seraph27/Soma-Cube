@@ -22,11 +22,9 @@ public class PlayerManager : MonoBehaviour
 
     [Header("Select Object Handler")]
     public LayerMask raycastLayer;
-
     public Transform SelectReferencePosition;
     public float swipeThreshold;
     public float swipeSpeed = 2f;
-
     public float rotationIncrement = 90f;
 
     bool SelectingPiece;
@@ -40,11 +38,16 @@ public class PlayerManager : MonoBehaviour
 
     Vector3 midPoint;
     Quaternion snapRotation;
+    public Transform gridMidPoint; //** seraph ** 
+    List<GameObject> placedPieces = new List<GameObject>(); //** seraph **
+
+    GameMenu gameMenu;
 
     // Start is called before the first frame update
     void Start()
     {
         RotationButtons.SetActive(false);
+        gameMenu = GameObject.Find("GameMenu").GetComponent<GameMenu>();
 
     }
 
@@ -112,7 +115,7 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-    void ResetAllPieces()
+    public void ResetAllPieces()
     {
         ResetPiece();
         RotateMode = false;
@@ -148,6 +151,7 @@ public class PlayerManager : MonoBehaviour
     {
         RotateMode = false;
         MoveMode = false;
+        placedPieces.Add(currentPiece);
         if (currentPieceComponent != null)
         {
             currentPieceComponent.PlacePiece();
@@ -284,5 +288,25 @@ public class PlayerManager : MonoBehaviour
     public void GridRotateRight()
     {
         Grid.transform.RotateAround(GridMiddle.transform.position, transform.up, 90f);
+    }
+
+    public void IsInGrid(){
+        //write code that highlkights if the piece is withint the 3x3 place
+        foreach(GameObject piece in placedPieces){
+            Vector3 midPoint = piece.GetComponent<CubePiece>().GetMidPoint();
+            if(Mathf.Abs(midPoint.x - gridMidPoint.position.x) > 1.1f ||  //1.1 to prevent floating error 
+            Mathf.Abs(midPoint.y - gridMidPoint.position.y) > 1.1f ||
+            Mathf.Abs(midPoint.z - gridMidPoint.position.z) > 1.1f) {
+                Renderer[] ren = piece.GetComponentsInChildren<Renderer>();
+                foreach(Renderer r in ren){
+                    r.material.color = Color.black; //black if not in grid (idk how to check for correct spot yet)
+                }
+                //Debug.Log(Mathf.Abs(midPoint.x - gridMidPoint.position.x) + ", Y:" + Mathf.Abs(midPoint.y - gridMidPoint.position.y) + ", Z:" + Mathf.Abs(midPoint.z - gridMidPoint.position.z));
+            }
+            
+        }
+
+        
+        
     }
 }
