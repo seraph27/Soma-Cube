@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
 using ControlFreak2;
+using static ControlFreak2.TouchControl;
 
 public class PlayerManager : MonoBehaviour
 {
+    [Header("Test")]
+
     public GameObject TestObject;
     public GameObject TestObject2;
     public GameObject TestObject3;
@@ -41,14 +44,13 @@ public class PlayerManager : MonoBehaviour
     public Transform gridMidPoint; //** seraph ** 
     List<GameObject> placedPieces = new List<GameObject>(); //** seraph **
 
-    GameMenu gameMenu;
+    LevelGenerator levelgenerator;
 
     // Start is called before the first frame update
     void Start()
     {
         RotationButtons.SetActive(false);
-        gameMenu = GameObject.Find("GameMenu").GetComponent<GameMenu>();
-
+        levelgenerator = FindObjectOfType<LevelGenerator>();
     }
 
     // Update is called once per frame
@@ -147,7 +149,7 @@ public class PlayerManager : MonoBehaviour
 
         RotationSnap();
     }
-    void PlacePiece() //Or unselect
+    void PlacePiece() //places down current piece
     {
         RotateMode = false;
         MoveMode = false;
@@ -155,14 +157,17 @@ public class PlayerManager : MonoBehaviour
         if (currentPieceComponent != null)
         {
             currentPieceComponent.PlacePiece();
-            SetLayerRecursively(currentPiece, 0);
+            SetLayerRecursively(currentPiece, 6);
         }
 
         currentPieceComponent = null;
         currentPiece = null;
         SelectingPiece = false;
+
+        //check if player filled all slots
+        levelgenerator.CheckGrid();
     }
-    void CancelRotatePiece() //reset piece if currently in rotation mode and switching to another piece
+    void CancelPieceEdit() //reset piece if currently in rotation mode and switching to another piece
     {
         RotateMode = false;
         MoveMode = false;
@@ -180,11 +185,11 @@ public class PlayerManager : MonoBehaviour
         {
             if (RotateMode)
             {
-                CancelRotatePiece();
+                CancelPieceEdit();
             }
             if (MoveMode)
             {
-                PlacePiece();
+                CancelPieceEdit();
             }
         }
     }
@@ -241,29 +246,58 @@ public class PlayerManager : MonoBehaviour
         RotateMode = false;
         MoveMode = true;
         RotationButtons.SetActive(false);
+
+        MoveUpdateStart();
+        
+    }
+
+    void MoveUpdateStart() //move the piece to the estimated center of the screen
+    {
+
+        Vector3 rayOrigin = new Vector3(0.5f, 0.5f, 0f); // center of the screen
+        Ray ray = Camera.main.ViewportPointToRay(rayOrigin);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, raycastLayer))
+        {
+            midPoint = currentPieceComponent.GetMidPoint();
+            Vector3 offset = midPoint - currentPiece.transform.position;
+            currentPiece.transform.position = hit.point - offset + Vector3.up * 10f;
+
+            // Round the position to the nearest integer
+            Vector3 roundedPosition = new Vector3(
+                Mathf.Round(currentPiece.transform.position.x),
+                Mathf.Round(currentPiece.transform.position.y),
+                Mathf.Round(currentPiece.transform.position.z)
+            );
+
+            currentPiece.transform.position = roundedPosition;
+        }
     }
 
     void MoveUpdate()
     {
         if (MoveMode) //MOVING THE OBJECT OUT OF VIEW OF THE CAMERA WITH AN OFFSET, FOR PIECE TO RAYCAST DOWN AND MOVE THE CLONE PIECE
         {
-            Vector3 mouse = Input.mousePosition;
-            Ray castPoint = Camera.main.ScreenPointToRay(mouse);
-            RaycastHit hit;
-            if (Physics.Raycast(castPoint, out hit, Mathf.Infinity,raycastLayer))
+            if (CF2Input.GetKey(KeyCode.F))
             {
-                midPoint = currentPieceComponent.GetMidPoint();
-                Vector3 offset = midPoint - currentPiece.transform.position;
-                currentPiece.transform.position = hit.point - offset + Vector3.up * 10f;
+                Vector3 mouse = Input.mousePosition;
+                Ray castPoint = Camera.main.ScreenPointToRay(mouse);
+                RaycastHit hit;
+                if (Physics.Raycast(castPoint, out hit, Mathf.Infinity, raycastLayer))
+                {
+                    midPoint = currentPieceComponent.GetMidPoint();
+                    Vector3 offset = midPoint - currentPiece.transform.position;
+                    currentPiece.transform.position = hit.point - offset + Vector3.up * 10f;
 
-                // Round the position to the nearest integer
-                Vector3 roundedPosition = new Vector3(
-                    Mathf.Round(currentPiece.transform.position.x),
-                    Mathf.Round(currentPiece.transform.position.y),
-                    Mathf.Round(currentPiece.transform.position.z)
-                );
+                    // Round the position to the nearest integer
+                    Vector3 roundedPosition = new Vector3(
+                        Mathf.Round(currentPiece.transform.position.x),
+                        Mathf.Round(currentPiece.transform.position.y),
+                        Mathf.Round(currentPiece.transform.position.z)
+                    );
 
-                currentPiece.transform.position = roundedPosition;
+                    currentPiece.transform.position = roundedPosition;
+                }
             }
 
         }
@@ -282,11 +316,13 @@ public class PlayerManager : MonoBehaviour
 
     public void GridRotateLeft()
     {
+        ResetPiece();
         Grid.transform.RotateAround(GridMiddle.transform.position, transform.up, -90f);
     }
 
     public void GridRotateRight()
     {
+        ResetPiece();
         Grid.transform.RotateAround(GridMiddle.transform.position, transform.up, 90f);
     }
 
@@ -309,4 +345,9 @@ public class PlayerManager : MonoBehaviour
         
         
     }
+
+
+
+
+
 }
