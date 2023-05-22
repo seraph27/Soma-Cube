@@ -5,8 +5,16 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    public void PlayGame() {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+    public GameObject LevelGenerator;
+
+    public void Start(){
+
+    }
+
+    public void SelectLevel(string difficulty) {
+        Variable.difficulty = difficulty;
+        Debug.Log("Select Level");
+        SceneManager.LoadScene("SomaCube");
     }
 
     public void QuitGame() {

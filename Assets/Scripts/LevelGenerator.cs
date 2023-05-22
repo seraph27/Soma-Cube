@@ -20,10 +20,33 @@ public class LevelGenerator : MonoBehaviour
     public int minCubeCount;
     public int maxCubeCount;
     List<GameObject> cubes = new List<GameObject>();
+
+    string difficulty;
+    public GameObject allcubes; 
     // Start is called before the first frame update
     void Start()
     {
+        difficulty = Variable.difficulty;
+        List<GameObject> placement = new List<GameObject>();
         
+        foreach(Transform child in allcubes.transform){
+            placement.Add(child.gameObject);
+            child.gameObject.SetActive(true);
+            Debug.Log(child.gameObject);
+        } 
+        
+        int [] easy = {27, 29, 30};
+        int [] hardcode = {11, 13, 19, 20, 22, 23, 25, 27, 28, 29, 30};
+        int [] select = null;
+
+        if(difficulty == "1"){
+            select = easy;
+        } else if(difficulty =="3"){
+            select = hardcode;
+        }
+        foreach(int i in select){
+            placement[i-4].SetActive(false);
+        }
     }
 
     // Update is called once per frame
