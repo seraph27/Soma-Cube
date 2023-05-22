@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using ControlFreak2;
 
 public class SwipeManager : MonoBehaviour
 {
@@ -20,15 +21,16 @@ public class SwipeManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.touchCount == 0)
+        Debug.Log(Input.GetTouch(0).deltaPosition.sqrMagnitude);
+        if (CF2Input.touchCount == 0)
             return;
 
-        if (Input.GetTouch(0).deltaPosition.sqrMagnitude != 0)
+        if (CF2Input.GetTouch(0).deltaPosition.sqrMagnitude != 0)
         {
             if (swiping == false)
             {
                 swiping = true;
-                lastPosition = Input.GetTouch(0).position;
+                lastPosition = CF2Input.GetTouch(0).position;
                 return;
             }
             else
@@ -37,7 +39,7 @@ public class SwipeManager : MonoBehaviour
                 {
                     if (Swipe != null)
                     {
-                        Vector2 direction = Input.GetTouch(0).position - lastPosition;
+                        Vector2 direction = CF2Input.GetTouch(0).position - lastPosition;
 
                         if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
                         {
