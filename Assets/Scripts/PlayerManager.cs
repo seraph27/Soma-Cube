@@ -4,6 +4,7 @@ using System.Net;
 using UnityEngine;
 using ControlFreak2;
 using static ControlFreak2.TouchControl;
+using UnityEngine.UI;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -18,6 +19,8 @@ public class PlayerManager : MonoBehaviour
 
     [Header("Button UI")]
     public GameObject RotationButtons;
+    public GameObject PlaceConfirmButton;
+    public Text PlaceConfirmButton_Text;
 
     [Header("Grid")]
     public GameObject Grid;
@@ -31,13 +34,18 @@ public class PlayerManager : MonoBehaviour
     public float rotationIncrement = 90f;
 
     bool SelectingPiece;
-    bool Rotating;
+    bool RotatingPiece;
 
     bool RotateMode;
     bool MoveMode;
 
     GameObject currentPiece;
     CubePiece currentPieceComponent;
+
+    [Header("Rotate Grid")]
+    bool RotatingGrid;
+
+
 
     Vector3 midPoint;
     Quaternion snapRotation;
@@ -59,19 +67,47 @@ public class PlayerManager : MonoBehaviour
         float x = CF2Input.GetAxis("Mouse X");
         float y = CF2Input.GetAxis("Mouse Y");
 
+        float x2 = CF2Input.GetAxis("Mouse X2"); //For the grid
+        float y2 = CF2Input.GetAxis("Mouse Y2"); //For the grid
 
 
-        if(Mathf.Abs(x) > swipeThreshold || Mathf.Abs(y) > swipeThreshold)
+        //Piece Rotation
+        if (Mathf.Abs(x) > swipeThreshold || Mathf.Abs(y) > swipeThreshold)
         {
-            Rotating = true;
+            RotatingPiece = true;
         }
-        if (Mathf.Abs(x) == 0 && Mathf.Abs(y) == 0 && Rotating)
+        if (Mathf.Abs(x) == 0 && Mathf.Abs(y) == 0 && RotatingPiece)
         {
-            Rotating = false;
+            RotatingPiece = false;
             RotationSnap();
         }
         RotationUpdate(x,y);
 
+        //Grid rotation
+        if (Mathf.Abs(x2) > swipeThreshold || Mathf.Abs(y2) > swipeThreshold)
+        {
+            RotatingGrid = true;
+        }
+        if (Mathf.Abs(x2) == 0 && Mathf.Abs(y2) == 0 && RotatingGrid)
+        {
+            RotatingGrid = false;
+            GridRotationSnap();
+        }
+        GridRotationUpdate(x2, y2);
+
+        PlaceConfirmButton.SetActive(false);
+        if (SelectingPiece)
+        {
+            PlaceConfirmButton.SetActive(true);
+            if(MoveMode)
+            {
+                PlaceConfirmButton_Text.text = "Confirm";
+            }
+            if (RotateMode)
+            {
+                PlaceConfirmButton_Text.text = "Place";
+            }
+        }
 
         //for testing
         if (CF2Input.GetKeyDown(KeyCode.Alpha1))
@@ -87,35 +123,29 @@ public class PlayerManager : MonoBehaviour
             SelectPiece(TestObject3);
         }
 
+
+
         if (CF2Input.GetKeyDown(KeyCode.R))
         {
             ResetAllPieces();
         }
-        if (CF2Input.GetKeyDown(KeyCode.Q))
-        {
-            GridRotateLeft();
-        }
-        if (CF2Input.GetKeyDown(KeyCode.W))
-        {
-            GridRotateRight();
-        }
-        if (CF2Input.GetKeyDown(KeyCode.E))
-        {
-            if (RotateMode)
-            {
-                Debug.Log("MoveMode");
-                MovePiece(); //Stop rotationmode and go to move mode
-            }
-            else if(MoveMode)
-            {
-                PlacePiece();
-            }
-        }
-        
+       
         MoveUpdate();
         
     }
 
+    public void ConfirmPlaceButton()
+    {
+        if (RotateMode)
+        {
+            Debug.Log("MoveMode");
+            MovePiece(); //Stop rotationmode and go to move mode
+        }
+        else if (MoveMode)
+        {
+            PlacePiece();
+        }
+    }
 
     public void ResetAllPieces()
     {
@@ -142,10 +172,10 @@ public class PlayerManager : MonoBehaviour
         SelectingPiece = true;
 
         currentPieceComponent = currentPiece.GetComponent<CubePiece>();
-        currentPiece.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
         currentPieceComponent.IsMoving = false;
 
         SetLayerRecursively(currentPiece, 2);
+        currentPiece.transform.parent = null;
 
         RotationSnap();
     }
@@ -158,8 +188,10 @@ public class PlayerManager : MonoBehaviour
         {
             currentPieceComponent.PlacePiece();
             SetLayerRecursively(currentPiece, 6);
+            currentPiece.transform.parent = Grid.transform;
         }
 
+        PlaceConfirmButton.SetActive(true);
         currentPieceComponent = null;
         currentPiece = null;
         SelectingPiece = false;
@@ -172,7 +204,6 @@ public class PlayerManager : MonoBehaviour
         RotateMode = false;
         MoveMode = false;
         currentPiece.transform.position = new Vector3(0, -5, 0);
-        currentPiece.transform.localScale = new Vector3(1f,1f,1f);
         currentPieceComponent = null;
         SelectingPiece = false;
 
@@ -196,53 +227,22 @@ public class PlayerManager : MonoBehaviour
 
 
 
-    void RotationUpdate(float rotationX, float rotationY)
-    {
-        if (SelectingPiece)
-        {
-            if (Rotating)
-            {
-                // currentPiece.transform.rotation *= Camera.transform.tra Quaternion.Euler(rotationX, rotationY, 0);
-                currentPiece.transform.RotateAround(SelectReferencePosition.transform.position, -transform.up, rotationX * swipeSpeed);
-                currentPiece.transform.RotateAround(SelectReferencePosition.transform.position, transform.right, rotationY * swipeSpeed);
-            }
-            else if(MoveMode)
-            {
-                currentPiece.transform.rotation = snapRotation;
-            }
-            else
-            {
-                //Lerp Piece to closest rotation snap
-                currentPiece.transform.rotation = Quaternion.Lerp(currentPiece.transform.rotation, snapRotation, 10f * Time.deltaTime);
-                midPoint = currentPieceComponent.GetMidPoint();
-                Vector3 moveVec = SelectReferencePosition.transform.position - midPoint;
-                currentPieceComponent.transform.position += moveVec;
-            }
-        }
-    }
-
-    void RotationSnap()
-    {
-        if (currentPiece != null)
-        {
-            float x = (Mathf.Round(currentPiece.transform.eulerAngles.x / rotationIncrement) * rotationIncrement);
-            float y = (Mathf.Round(currentPiece.transform.eulerAngles.y / rotationIncrement) * rotationIncrement);
-            float z = (Mathf.Round(currentPiece.transform.eulerAngles.z / rotationIncrement) * rotationIncrement);
 
 
-            Vector3 newrot = new Vector3(x, y, z);
-            snapRotation = Quaternion.Euler(newrot);
-        }
-    }
+    ////////////////////////////////////////////////////
 
+
+    // MOVING  //
+
+
+    ////////////////////////////////////////////////////
 
     //Go from rotation to move mode
     public void MovePiece()
     {
-        currentPiece.transform.localScale = new Vector3(1f, 1f, 1f);
         currentPieceComponent.MovePiece();
 
-        Rotating = false;
+        RotatingPiece = false;
         RotateMode = false;
         MoveMode = true;
         RotationButtons.SetActive(false);
@@ -254,10 +254,8 @@ public class PlayerManager : MonoBehaviour
     void MoveUpdateStart() //move the piece to the estimated center of the screen
     {
 
-        Vector3 rayOrigin = new Vector3(0.5f, 0.5f, 0f); // center of the screen
-        Ray ray = Camera.main.ViewportPointToRay(rayOrigin);
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, Mathf.Infinity, raycastLayer))
+        if (Physics.Raycast(SelectReferencePosition.transform.position,-Vector3.up, out hit, Mathf.Infinity, raycastLayer))
         {
             midPoint = currentPieceComponent.GetMidPoint();
             Vector3 offset = midPoint - currentPiece.transform.position;
@@ -314,17 +312,97 @@ public class PlayerManager : MonoBehaviour
     }
 
 
-    public void GridRotateLeft()
+
+
+    ////////////////////////////////////////////////////
+
+
+    // ROTATION  //
+
+
+    ////////////////////////////////////////////////////
+
+    void RotationUpdate(float rotationX, float rotationY)
     {
-        ResetPiece();
-        Grid.transform.RotateAround(GridMiddle.transform.position, transform.up, -90f);
+        if (SelectingPiece)
+        {
+            if (RotatingPiece)
+            {
+                // currentPiece.transform.rotation *= Camera.transform.tra Quaternion.Euler(rotationX, rotationY, 0);
+                currentPiece.transform.RotateAround(SelectReferencePosition.transform.position, -transform.up, rotationX * swipeSpeed);
+                currentPiece.transform.RotateAround(SelectReferencePosition.transform.position, transform.right, rotationY * swipeSpeed);
+            }
+            else if (MoveMode)
+            {
+                currentPiece.transform.rotation = snapRotation;
+            }
+            else
+            {
+                //Lerp Piece to closest rotation snap
+                currentPiece.transform.rotation = Quaternion.Lerp(currentPiece.transform.rotation, snapRotation, 10f * Time.deltaTime);
+                midPoint = currentPieceComponent.GetMidPoint();
+                Vector3 moveVec = SelectReferencePosition.transform.position - midPoint;
+                currentPieceComponent.transform.position += moveVec;
+            }
+        }
     }
 
-    public void GridRotateRight()
+    void RotationSnap()
     {
-        ResetPiece();
-        Grid.transform.RotateAround(GridMiddle.transform.position, transform.up, 90f);
+        if (currentPiece != null)
+        {
+            float x = (Mathf.Round(currentPiece.transform.eulerAngles.x / rotationIncrement) * rotationIncrement);
+            float y = (Mathf.Round(currentPiece.transform.eulerAngles.y / rotationIncrement) * rotationIncrement);
+            float z = (Mathf.Round(currentPiece.transform.eulerAngles.z / rotationIncrement) * rotationIncrement);
+
+
+            Vector3 newrot = new Vector3(x, y, z);
+            snapRotation = Quaternion.Euler(newrot);
+        }
     }
+
+
+
+    Quaternion snapRotationGrid  = Quaternion.identity; 
+    void GridRotationUpdate(float rotationX, float rotationY)
+    {
+        if (RotatingGrid && !MoveMode)
+        {
+            // currentPiece.transform.rotation *= Camera.transform.tra Quaternion.Euler(rotationX, rotationY, 0);
+            Grid.transform.RotateAround(GridMiddle.transform.position, -transform.up, rotationX * swipeSpeed);
+        }
+        else
+        {
+            //Lerp Piece to closest rotation snap
+            Grid.transform.rotation = Quaternion.Lerp(Grid.transform.rotation, snapRotationGrid, 10f * Time.deltaTime);
+        }
+    }
+
+    void GridRotationSnap()
+    {
+        if (Grid != null)
+        {
+            float x = (Mathf.Round(Grid.transform.eulerAngles.x / rotationIncrement) * rotationIncrement);
+            float y = (Mathf.Round(Grid.transform.eulerAngles.y / rotationIncrement) * rotationIncrement);
+            float z = (Mathf.Round(Grid.transform.eulerAngles.z / rotationIncrement) * rotationIncrement);
+
+            Vector3 newrot = new Vector3(x, y, z);
+            snapRotationGrid = Quaternion.Euler(newrot);
+        }
+    }
+
+
+
+
+    ////////////////////////////////////////////////////
+
+
+    // CHECKS  //
+
+
+    ////////////////////////////////////////////////////
+
+
 
     public void IsInGrid(){
         //write code that highlkights if the piece is withint the 3x3 place

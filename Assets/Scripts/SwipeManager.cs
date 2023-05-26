@@ -21,7 +21,7 @@ public class SwipeManager : MonoBehaviour
 
     void Update()
     {
-        Debug.Log(Input.GetTouch(0).deltaPosition.sqrMagnitude);
+       // Debug.Log(Input.GetTouch(0).deltaPosition.sqrMagnitude);
         if (CF2Input.touchCount == 0)
             return;
 
