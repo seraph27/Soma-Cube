@@ -15,6 +15,7 @@ public class PlayerManager : MonoBehaviour
     public GameObject TestObject3;
 
     public GameObject MainCamera;
+    public GameObject emptyPrefab;
 
     [Header("Button UI")]
     public GameObject RotationButtons;

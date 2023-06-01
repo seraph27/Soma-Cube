@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
+using static UnityEngine.ParticleSystem;
 
 public class LevelGenerator : MonoBehaviour
 {
@@ -13,62 +15,79 @@ public class LevelGenerator : MonoBehaviour
 
     public LayerMask PlacedCubesLayer;
 
-
     public bool check;
-
 
     public int minCubeCount;
     public int maxCubeCount;
-    List<GameObject> cubes = new List<GameObject>();
 
-    string difficulty;
-    public GameObject allcubes; 
+    public GameObject[] allCubes;
+
     // Start is called before the first frame update
     void Start()
     {
-        /*
-        difficulty = Variable.difficulty;
-        List<GameObject> placement = new List<GameObject>();
-        
-        foreach(Transform child in allcubes.transform){
-            placement.Add(child.gameObject);
-            child.gameObject.SetActive(true);
-            Debug.Log(child.gameObject);
-        } 
-        
-        int [] easy = {27, 29, 30};
-        int [] hardcode = {11, 13, 19, 20, 22, 23, 25, 27, 28, 29, 30};
-        int [] select = null;
-
-        if(difficulty == "1"){
-            select = easy;
-        } else if(difficulty =="3"){
-            select = hardcode;
-        }
-        foreach(int i in select){
-            placement[i-4].SetActive(false);
-        }
-        */
+        GenerateLevel(); 
     }
 
     // Update is called once per frame
-    void GenerateRandomPiece()
+    void GenerateLevel()
     {
-        GameObject curObj = null;
+        TextAsset txtAsset = (TextAsset)Resources.Load("pz_253_2457", typeof(TextAsset));
+        string tileFile = txtAsset.text;
 
-        int blockCount = Random.Range(minCubeCount, maxCubeCount + 1);
 
-        GameObject raycastPoint = RaycastDownPositions[Random.Range(0, RaycastDownPositions.Length)];
-        RaycastHit hit;
-        Physics.Raycast(raycastPoint.transform.position, -Vector3.up, out hit, 100f, PlacedCubesLayer);
+        string[] AllLines = tileFile.Split('\n');
 
-        if (hit.collider != null)
+        string[] pieces = AllLines[1].Split(',');
+
+        Debug.Log("number of pieces" + (pieces.Length-1).ToString());
+
+        for (int i = 0; i < pieces.Length-1; i++)
         {
-            cubes.Add(hit.collider.gameObject); 
-            curObj = hit.collider.gameObject;
+            string[] text = AllLines[i*2+2].Split(',');
+            int pieceNumber = int.Parse(text[0]);
+            int numberOfBlocks = int.Parse(text[1]);
+
+
+            string[] blockPositions = AllLines[i*2+3].Split(',');
+            
+            GameObject g = new GameObject();
+            g.name = "Piece" + pieceNumber.ToString();
+            g.transform.position = allCubes[int.Parse(blockPositions[0])].transform.position;
+
+            Debug.Log("number of blocks" + (blockPositions.Length - 1).ToString());
+
+            for (int a = 0; a < blockPositions.Length-1; a++)
+            {
+                int position = int.Parse(blockPositions[a]);
+                Debug.Log(position);
+
+                allCubes[position-1].transform.parent = g.transform; //-1 because of 0 indexing
+            }
+
         }
     }
 
+    string curString;
+    void readTextFile(string file_path)
+    {
+        if (File.Exists(file_path))
+        {
+            StreamReader inp_stm = new StreamReader(file_path);
+
+            while (!inp_stm.EndOfStream)
+            {
+                string text = inp_stm.ReadLine();
+                curString = text;
+            }
+
+            inp_stm.Close();
+        }
+        else
+        {
+            Debug.Log("Not exist");
+        }
+
+    }
 
     private void Update()
     {

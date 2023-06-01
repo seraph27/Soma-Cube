@@ -12,11 +12,12 @@ public class CubePiece : MonoBehaviour
 
     List<GameObject> CloneCubes = new List<GameObject>();
 
-    List<Vector3> Positions = new List<Vector3>();
+    List<GameObject> Positions = new List<GameObject>();
 
     public Vector3 midPoint;
 
     public bool IsMoving;
+
 
     GameObject clone;
 
@@ -42,7 +43,11 @@ public class CubePiece : MonoBehaviour
         {
             Transform child = transform.GetChild(i);
             Cubes.Add(child.gameObject);
-            Positions.Add(child.gameObject.transform.position);
+
+            GameObject g = Instantiate(playerManager.emptyPrefab);
+            g.transform.position = child.position;
+            g.transform.parent = playerManager.Grid.transform;
+            Positions.Add(g);
         }
     }
 
@@ -120,21 +125,19 @@ public class CubePiece : MonoBehaviour
 
     bool HintMode;
 
-    public void HintCheck()
+    public void HintCheck() //CHECK IF ANY OF THE CUBES ALIGN WITH THE INITIAL POSITIONS
     {
-        Debug.Log("Checking");
         foreach (GameObject cube in CloneCubes)
         {
             cube.GetComponent<MeshRenderer>().material = playerManager.redTranslucent;
-            Debug.Log("RED");
 
-            foreach (Vector3 inipos in Positions)
+            foreach (GameObject inipos in Positions)
             {
-                if (cube.transform.position == inipos)
+                if (PositionCompare(cube.transform.position, inipos.transform.position,0.1f))
                 {
+
                     cube.GetComponent<MeshRenderer>().material = playerManager.greenTranslucent;
                 }
-
             }
         }
         HintMode = true;
@@ -142,8 +145,6 @@ public class CubePiece : MonoBehaviour
 
     public void FinishHint()
     {
-        Debug.Log("Finish Check");
-
         foreach (GameObject cube in CloneCubes)
         {
             cube.GetComponent<MeshRenderer>().material = inimat;
@@ -157,5 +158,18 @@ public class CubePiece : MonoBehaviour
         {
             FinishHint();
         }
+    }
+
+
+
+    public bool PositionCompare(Vector3 pos1, Vector3 pos2, float range)
+    {
+        if(pos1.x < pos2.x + range && pos1.x > pos2.x - range
+            && pos1.y < pos2.y + range && pos1.y > pos2.y - range
+             && pos1.z < pos2.z + range && pos1.z > pos2.z - range)
+        {
+            return true;
+        }
+        return false;
     }
 }
