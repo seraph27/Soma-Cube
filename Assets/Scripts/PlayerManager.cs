@@ -14,13 +14,14 @@ public class PlayerManager : MonoBehaviour
     public GameObject TestObject2;
     public GameObject TestObject3;
 
-
     public GameObject MainCamera;
 
     [Header("Button UI")]
     public GameObject RotationButtons;
     public GameObject PlaceConfirmButton;
     public Text PlaceConfirmButton_Text;
+
+    public GameObject HintButton;
 
     [Header("Grid")]
     public GameObject Grid;
@@ -36,8 +37,9 @@ public class PlayerManager : MonoBehaviour
     bool SelectingPiece;
     bool RotatingPiece;
 
-    bool RotateMode;
-    bool MoveMode;
+    public bool RotateMode;
+    public bool MoveMode;
+    public bool IsMovingPiece;
 
     GameObject currentPiece;
     CubePiece currentPieceComponent;
@@ -45,7 +47,9 @@ public class PlayerManager : MonoBehaviour
     [Header("Rotate Grid")]
     bool RotatingGrid;
 
-
+    [Header("Colors")]
+    public Material redTranslucent;
+    public Material greenTranslucent;
 
     Vector3 midPoint;
     Quaternion snapRotation;
@@ -71,7 +75,7 @@ public class PlayerManager : MonoBehaviour
         float y2 = CF2Input.GetAxis("Mouse Y2"); //For the grid
 
 
-        //Piece Rotation
+        //Piece Rotation ------------------------------------------------------------------------------------
         if (Mathf.Abs(x) > swipeThreshold || Mathf.Abs(y) > swipeThreshold)
         {
             RotatingPiece = true;
@@ -83,7 +87,7 @@ public class PlayerManager : MonoBehaviour
         }
         RotationUpdate(x,y);
 
-        //Grid rotation
+        //Grid rotation------------------------------------------------------------------------------------------------------
         if (Mathf.Abs(x2) > swipeThreshold || Mathf.Abs(y2) > swipeThreshold)
         {
             RotatingGrid = true;
@@ -109,19 +113,6 @@ public class PlayerManager : MonoBehaviour
             }
         }
 
-        //for testing
-        if (CF2Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            SelectPiece(TestObject);
-        }
-        if (CF2Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            SelectPiece(TestObject2);
-        }
-        if (CF2Input.GetKeyDown(KeyCode.Alpha3))
-        {
-            SelectPiece(TestObject3);
-        }
 
 
 
@@ -129,16 +120,18 @@ public class PlayerManager : MonoBehaviour
         {
             ResetAllPieces();
         }
-       
+
+
+
+        //MOVE MODE------------------------------------------------------------------------------------------------------
         MoveUpdate();
-        
+        HintUpdate();
     }
 
     public void ConfirmPlaceButton()
     {
         if (RotateMode)
         {
-            Debug.Log("MoveMode");
             MovePiece(); //Stop rotationmode and go to move mode
         }
         else if (MoveMode)
@@ -259,7 +252,7 @@ public class PlayerManager : MonoBehaviour
         {
             midPoint = currentPieceComponent.GetMidPoint();
             Vector3 offset = midPoint - currentPiece.transform.position;
-            currentPiece.transform.position = hit.point - offset + Vector3.up * 10f;
+            currentPiece.transform.position = hit.point - offset + Vector3.up * 20f;
 
             // Round the position to the nearest integer
             Vector3 roundedPosition = new Vector3(
@@ -274,10 +267,13 @@ public class PlayerManager : MonoBehaviour
 
     void MoveUpdate()
     {
+        IsMovingPiece = false;
         if (MoveMode) //MOVING THE OBJECT OUT OF VIEW OF THE CAMERA WITH AN OFFSET, FOR PIECE TO RAYCAST DOWN AND MOVE THE CLONE PIECE
         {
             if (CF2Input.GetKey(KeyCode.F))
             {
+                IsMovingPiece = true;
+
                 Vector3 mouse = Input.mousePosition;
                 Ray castPoint = Camera.main.ScreenPointToRay(mouse);
                 RaycastHit hit;
@@ -285,7 +281,7 @@ public class PlayerManager : MonoBehaviour
                 {
                     midPoint = currentPieceComponent.GetMidPoint();
                     Vector3 offset = midPoint - currentPiece.transform.position;
-                    currentPiece.transform.position = hit.point - offset + Vector3.up * 10f;
+                    currentPiece.transform.position = hit.point - offset + Vector3.up * 20f;
 
                     // Round the position to the nearest integer
                     Vector3 roundedPosition = new Vector3(
@@ -295,7 +291,10 @@ public class PlayerManager : MonoBehaviour
                     );
 
                     currentPiece.transform.position = roundedPosition;
+
                 }
+
+
             }
 
         }
@@ -402,7 +401,22 @@ public class PlayerManager : MonoBehaviour
 
     ////////////////////////////////////////////////////
 
+    void HintUpdate()
+    {
+        if (MoveMode)
+        {
+            HintButton.SetActive(true);
+        }
+        else
+        {
+            HintButton.SetActive(false);
+        }
+    }
 
+    public void HintOpen()
+    {
+        currentPieceComponent.HintCheck();
+    }
 
     public void IsInGrid(){
         //write code that highlkights if the piece is withint the 3x3 place

@@ -10,6 +10,10 @@ public class CubePiece : MonoBehaviour
 
     List<GameObject> Cubes = new List<GameObject>();
 
+    List<GameObject> CloneCubes = new List<GameObject>();
+
+    List<Vector3> Positions = new List<Vector3>();
+
     public Vector3 midPoint;
 
     public bool IsMoving;
@@ -18,49 +22,18 @@ public class CubePiece : MonoBehaviour
 
     PlayerManager playerManager;
 
-    public Vector3 GetMidPoint()
-    {
-        //Gets the middle point of a piece, used for rotation
-        Vector3 newpoint = Vector3.zero;
-        foreach (GameObject cube in Cubes)
-        {
-            newpoint += cube.transform.position;
-        }
-        newpoint /= Cubes.Count;
-        return newpoint;
-    }
-    /*
-    // Start is called before the first frame update
-    public void AdjustPivotToMidPoint()
-    {
-        fromPoint = transform.position;
-
-        //Gets the middle point of a piece, used for rotation
-        foreach (GameObject cube in Cubes)
-        {
-            newPoint += cube.transform.position;
-        }
-        newPoint /= Cubes.Length;
-
-        transform.position = newPoint;
-
-
-        Vector3 cubeShiftPos = fromPoint - newPoint;
-        foreach (GameObject cube in Cubes)
-        {
-            cube.transform.position += cubeShiftPos;
-        }
-    }
-    */
-
+    Material inimat;
 
     private void Start()
     {
-        
+
         playerManager = FindObjectOfType<PlayerManager>();
 
         SetCubes();
         CreateClone();
+
+        transform.position = new Vector3(0, -5f, 0);
+        inimat = Cubes[0].GetComponent<MeshRenderer>().material;
     }
 
     public void SetCubes()
@@ -69,6 +42,7 @@ public class CubePiece : MonoBehaviour
         {
             Transform child = transform.GetChild(i);
             Cubes.Add(child.gameObject);
+            Positions.Add(child.gameObject.transform.position);
         }
     }
 
@@ -78,6 +52,11 @@ public class CubePiece : MonoBehaviour
         Destroy(clone.GetComponent<CubePiece>()); //Remove the cubepiece component for the clone so it doesnt clone itself infintely
         SetLayerRecursively(clone, 2);
 
+        for (int i = 0; i < clone.transform.childCount; i++)
+        {
+            Transform child = clone.transform.GetChild(i);
+            CloneCubes.Add(child.gameObject);
+        }
     }
     void LateUpdate()
     {
@@ -121,6 +100,62 @@ public class CubePiece : MonoBehaviour
         foreach (Transform child in obj.transform)
         {
             SetLayerRecursively(child.gameObject, newLayer);
+        }
+    }
+
+
+
+    public Vector3 GetMidPoint()
+    {
+        //Gets the middle point of a piece, used for rotation
+        Vector3 newpoint = Vector3.zero;
+        foreach (GameObject cube in Cubes)
+        {
+            newpoint += cube.transform.position;
+        }
+        newpoint /= Cubes.Count;
+        return newpoint;
+    }
+
+
+    bool HintMode;
+
+    public void HintCheck()
+    {
+        Debug.Log("Checking");
+        foreach (GameObject cube in CloneCubes)
+        {
+            cube.GetComponent<MeshRenderer>().material = playerManager.redTranslucent;
+            Debug.Log("RED");
+
+            foreach (Vector3 inipos in Positions)
+            {
+                if (cube.transform.position == inipos)
+                {
+                    cube.GetComponent<MeshRenderer>().material = playerManager.greenTranslucent;
+                }
+
+            }
+        }
+        HintMode = true;
+    }
+
+    public void FinishHint()
+    {
+        Debug.Log("Finish Check");
+
+        foreach (GameObject cube in CloneCubes)
+        {
+            cube.GetComponent<MeshRenderer>().material = inimat;
+        }
+        HintMode = false;
+    }
+
+    void Update()
+    {
+        if((!playerManager.MoveMode || playerManager.IsMovingPiece) && HintMode )
+        {
+            FinishHint();
         }
     }
 }

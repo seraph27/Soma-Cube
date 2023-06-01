@@ -26,6 +26,7 @@ public class LevelGenerator : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        /*
         difficulty = Variable.difficulty;
         List<GameObject> placement = new List<GameObject>();
         
@@ -47,6 +48,7 @@ public class LevelGenerator : MonoBehaviour
         foreach(int i in select){
             placement[i-4].SetActive(false);
         }
+        */
     }
 
     // Update is called once per frame
