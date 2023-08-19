@@ -59,4 +59,10 @@ public class GameMenu : MonoBehaviour
     public void Restart(){
         playerController.ResetAllPieces();
     }
+
+
+    public void OpenEgroveURL()
+    {
+        Application.OpenURL("https://egrove.education/spatial-vis-daily-challenge");
+    }
 }

@@ -12,7 +12,7 @@ public class CubePiece : MonoBehaviour
 
     List<GameObject> CloneCubes = new List<GameObject>();
 
-    List<GameObject> Positions = new List<GameObject>();
+    public List<GameObject> Positions = new List<GameObject>();
 
     public Vector3 midPoint;
 
@@ -22,6 +22,7 @@ public class CubePiece : MonoBehaviour
     GameObject clone;
 
     PlayerManager playerManager;
+    LevelGenerator levelGen;
 
     Material inimat;
 
@@ -29,6 +30,7 @@ public class CubePiece : MonoBehaviour
     {
 
         playerManager = FindObjectOfType<PlayerManager>();
+        levelGen = FindObjectOfType<LevelGenerator>();
 
         SetCubes();
         CreateClone();
@@ -43,11 +45,6 @@ public class CubePiece : MonoBehaviour
         {
             Transform child = transform.GetChild(i);
             Cubes.Add(child.gameObject);
-
-            GameObject g = Instantiate(playerManager.emptyPrefab);
-            g.transform.position = child.position;
-            g.transform.parent = playerManager.Grid.transform;
-            Positions.Add(g);
         }
     }
 
@@ -129,14 +126,14 @@ public class CubePiece : MonoBehaviour
     {
         foreach (GameObject cube in CloneCubes)
         {
-            cube.GetComponent<MeshRenderer>().material = playerManager.redTranslucent;
+            cube.GetComponent<MeshRenderer>().material = levelGen.redTranslucent;
 
             foreach (GameObject inipos in Positions)
             {
                 if (PositionCompare(cube.transform.position, inipos.transform.position,0.1f))
                 {
 
-                    cube.GetComponent<MeshRenderer>().material = playerManager.greenTranslucent;
+                    cube.GetComponent<MeshRenderer>().material = levelGen.greenTranslucent;
                 }
             }
         }

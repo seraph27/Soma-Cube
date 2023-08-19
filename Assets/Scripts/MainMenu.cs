@@ -11,14 +11,16 @@ public class MainMenu : MonoBehaviour
 
     }
 
-    public void SelectLevel(string difficulty) {
-        Variable.difficulty = difficulty;
+    public void SelectLevel(int level) {
         Debug.Log("Select Level");
         SceneManager.LoadScene("SomaCube");
+
+        PlayerPrefs.SetInt("CurrentLevel", level);
     }
 
     public void QuitGame() {
         Debug.Log("Quit");
         Application.Quit();
     }
+
 }

@@ -5,26 +5,35 @@ using UnityEngine;
 using ControlFreak2;
 using static ControlFreak2.TouchControl;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PlayerManager : MonoBehaviour
 {
     [Header("Test")]
-
-    public GameObject TestObject;
-    public GameObject TestObject2;
-    public GameObject TestObject3;
+    public SwipeManager SwipePiece;
+    public SwipeManager SwipeGrid;
 
     public GameObject MainCamera;
     public GameObject emptyPrefab;
 
     [Header("Button UI")]
     public GameObject RotationButtons;
-    public GameObject PlaceConfirmButton;
-    public Text PlaceConfirmButton_Text;
+    public GameObject PlaceRotateButton;
+    public GameObject ConfirmButton;
+
 
     public GameObject HintButton;
 
+
+    public Text PlaceRotateButton_Text;
+    public Sprite moveSprite;
+    public Sprite rotateSprite;
+    public Image RotateMoveButtonSprite;
+
     [Header("Grid")]
+
+   public  List<GameObject> curPieces = new List<GameObject>();
+
     public GameObject Grid;
     public GameObject GridMiddle;
 
@@ -49,16 +58,12 @@ public class PlayerManager : MonoBehaviour
     bool RotatingGrid;
 
     [Header("Colors")]
-    public Material redTranslucent;
-    public Material greenTranslucent;
-
     Vector3 midPoint;
     Quaternion snapRotation;
     public Transform gridMidPoint; //** seraph ** 
     List<GameObject> placedPieces = new List<GameObject>(); //** seraph **
 
     LevelGenerator levelgenerator;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -69,57 +74,58 @@ public class PlayerManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float x = CF2Input.GetAxis("Mouse X");
-        float y = CF2Input.GetAxis("Mouse Y");
-
-        float x2 = CF2Input.GetAxis("Mouse X2"); //For the grid
-        float y2 = CF2Input.GetAxis("Mouse Y2"); //For the grid
-
+        float x = SwipePiece.swipeDelta.x;
+        float y = SwipePiece.swipeDelta.y;
+        float x2 = SwipeGrid.swipeDelta.x;
+        float y2 = SwipeGrid.swipeDelta.y;
 
         //Piece Rotation ------------------------------------------------------------------------------------
-        if (Mathf.Abs(x) > swipeThreshold || Mathf.Abs(y) > swipeThreshold)
+
+        if (Input.GetMouseButton(0))
         {
             RotatingPiece = true;
         }
-        if (Mathf.Abs(x) == 0 && Mathf.Abs(y) == 0 && RotatingPiece)
+        if (!Input.GetMouseButton(0) && RotatingPiece)
         {
             RotatingPiece = false;
             RotationSnap();
         }
-        RotationUpdate(x,y);
 
+        RotationUpdate(x, y);
         //Grid rotation------------------------------------------------------------------------------------------------------
-        if (Mathf.Abs(x2) > swipeThreshold || Mathf.Abs(y2) > swipeThreshold)
+
+        if (Input.GetMouseButton(0))
         {
             RotatingGrid = true;
         }
-        if (Mathf.Abs(x2) == 0 && Mathf.Abs(y2) == 0 && RotatingGrid)
+        if (!Input.GetMouseButton(0) && RotatingGrid)
         {
             RotatingGrid = false;
             GridRotationSnap();
         }
+
         GridRotationUpdate(x2, y2);
 
-        PlaceConfirmButton.SetActive(false);
+
+        PlaceRotateButton.SetActive(false);
         if (SelectingPiece)
         {
-            PlaceConfirmButton.SetActive(true);
+            PlaceRotateButton.SetActive(true);
             if(MoveMode)
             {
-                PlaceConfirmButton_Text.text = "Confirm";
+                PlaceRotateButton_Text.text = "Rotate";
+                RotateMoveButtonSprite.sprite = rotateSprite;
             }
             if (RotateMode)
             {
-                PlaceConfirmButton_Text.text = "Place";
+                PlaceRotateButton_Text.text = "Move";
+                RotateMoveButtonSprite.sprite = moveSprite;
             }
         }
-
-
-
-
-        if (CF2Input.GetKeyDown(KeyCode.R))
+        ConfirmButton.SetActive(false);
+        if (MoveMode)
         {
-            ResetAllPieces();
+            ConfirmButton.SetActive(true);
         }
 
 
@@ -129,7 +135,7 @@ public class PlayerManager : MonoBehaviour
         HintUpdate();
     }
 
-    public void ConfirmPlaceButton()
+    public void RotateMoveButton()
     {
         if (RotateMode)
         {
@@ -137,7 +143,7 @@ public class PlayerManager : MonoBehaviour
         }
         else if (MoveMode)
         {
-            PlacePiece();
+            RotatePiece(currentPiece);
         }
     }
 
@@ -146,13 +152,24 @@ public class PlayerManager : MonoBehaviour
         ResetPiece();
         RotateMode = false;
         MoveMode = false;
-        TestObject.transform.position = new Vector3(0, -5, 0);
-        TestObject2.transform.position = new Vector3(0, -5, 0);
-        TestObject3.transform.position = new Vector3(0, -5, 0);
+
+        foreach(GameObject g in curPieces)
+        {
+            g.transform.position = new Vector3(0, -5, 0);
+        }
+    }
+
+    public void RotatePieceButton(int piece)
+    {
+        RotatePiece(curPieces[piece]);
     }
     //Select a piece and bring it in front of the screen, Rotation mode
-    public void SelectPiece(GameObject PieceSelected)
+     void RotatePiece(GameObject piece)
     {
+        if (currentPiece != null && MoveMode) 
+        {
+            PlacePiece();
+        }
         ResetPiece();
 
         MoveMode = false;
@@ -160,9 +177,9 @@ public class PlayerManager : MonoBehaviour
 
         RotationButtons.SetActive(true);
 
+        currentPiece = piece;
 
-        PieceSelected.transform.position = SelectReferencePosition.position;
-        currentPiece = PieceSelected;
+        currentPiece.transform.position = SelectReferencePosition.position;
         SelectingPiece = true;
 
         currentPieceComponent = currentPiece.GetComponent<CubePiece>();
@@ -173,7 +190,9 @@ public class PlayerManager : MonoBehaviour
 
         RotationSnap();
     }
-    void PlacePiece() //places down current piece
+
+    
+    public void PlacePiece() //places down current piece
     {
         RotateMode = false;
         MoveMode = false;
@@ -185,7 +204,7 @@ public class PlayerManager : MonoBehaviour
             currentPiece.transform.parent = Grid.transform;
         }
 
-        PlaceConfirmButton.SetActive(true);
+        PlaceRotateButton.SetActive(true);
         currentPieceComponent = null;
         currentPiece = null;
         SelectingPiece = false;
@@ -193,6 +212,7 @@ public class PlayerManager : MonoBehaviour
         //check if player filled all slots
         levelgenerator.CheckGrid();
     }
+
     void CancelPieceEdit() //reset piece if currently in rotation mode and switching to another piece
     {
         RotateMode = false;
@@ -271,7 +291,8 @@ public class PlayerManager : MonoBehaviour
         IsMovingPiece = false;
         if (MoveMode) //MOVING THE OBJECT OUT OF VIEW OF THE CAMERA WITH AN OFFSET, FOR PIECE TO RAYCAST DOWN AND MOVE THE CLONE PIECE
         {
-            if (CF2Input.GetKey(KeyCode.F))
+            float xScreenHalf = Screen.height / 2;
+            if (Input.GetMouseButton(0) && Input.mousePosition.y < xScreenHalf)
             {
                 IsMovingPiece = true;
 
@@ -442,5 +463,10 @@ public class PlayerManager : MonoBehaviour
 
 
 
+
+    public void ReturnMainMenu()
+    {
+        SceneManager.LoadScene("TitleScreen");
+    }
 
 }

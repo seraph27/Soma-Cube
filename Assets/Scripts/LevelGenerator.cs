@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using static UnityEngine.ParticleSystem;
+using UnityEngine.UI;
 
 public class LevelGenerator : MonoBehaviour
 {
@@ -20,28 +20,53 @@ public class LevelGenerator : MonoBehaviour
     public int minCubeCount;
     public int maxCubeCount;
 
+    [Header("Levels")]
+    public TextAsset[] Levels;
+
+    [Header("Level Generation")]
+    public GameObject[] allPieces;
+
     public GameObject[] allCubes;
+
+    public Material redTranslucent;
+    public Material greenTranslucent;
+
+    public Material[] pieceMaterial;
+    public Sprite[] pieceImages;
+    public Image[] PieceSelectButtonImages;
+
+
+    public int levelDifficulty;
+
+    PlayerManager playerManager;
 
     // Start is called before the first frame update
     void Start()
     {
+        playerManager = FindObjectOfType<PlayerManager>();
+
         GenerateLevel(); 
     }
 
     // Update is called once per frame
     void GenerateLevel()
     {
-        TextAsset txtAsset = (TextAsset)Resources.Load("pz_253_2457", typeof(TextAsset));
+
+        TextAsset txtAsset = Levels[PlayerPrefs.GetInt("CurrentLevel")];
         string tileFile = txtAsset.text;
 
-
+        Debug.Log(PlayerPrefs.GetInt("CurrentLevel"));
         string[] AllLines = tileFile.Split('\n');
 
         string[] pieces = AllLines[1].Split(',');
 
         Debug.Log("number of pieces" + (pieces.Length-1).ToString());
 
-        for (int i = 0; i < pieces.Length-1; i++)
+        int length = pieces.Length - 1;
+
+        length = Mathf.Clamp(length, 0, levelDifficulty);
+
+        for (int i = 0; i < length; i++)
         {
             string[] text = AllLines[i*2+2].Split(',');
             int pieceNumber = int.Parse(text[0]);
@@ -49,21 +74,24 @@ public class LevelGenerator : MonoBehaviour
 
 
             string[] blockPositions = AllLines[i*2+3].Split(',');
-            
-            GameObject g = new GameObject();
-            g.name = "Piece" + pieceNumber.ToString();
-            g.transform.position = allCubes[int.Parse(blockPositions[0])].transform.position;
-
+         
             Debug.Log("number of blocks" + (blockPositions.Length - 1).ToString());
+
+            CubePiece piece = allPieces[pieceNumber - 1].GetComponent<CubePiece>();
 
             for (int a = 0; a < blockPositions.Length-1; a++)
             {
                 int position = int.Parse(blockPositions[a]);
                 Debug.Log(position);
-
-                allCubes[position-1].transform.parent = g.transform; //-1 because of 0 indexing
+                
+                piece.Positions.Add(allCubes[position - 1]);
+                allCubes[position - 1].SetActive(false);
             }
 
+            //0 indexing piece
+            playerManager.curPieces.Add(allPieces[pieceNumber -1]);
+
+            PieceSelectButtonImages[i].sprite = pieceImages[pieceNumber-1];
         }
     }
 

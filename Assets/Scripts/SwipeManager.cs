@@ -6,65 +6,55 @@ using ControlFreak2;
 
 public class SwipeManager : MonoBehaviour
 {
-    public enum SwipeDirection
-    {
-        Up,
-        Down,
-        Right,
-        Left
-    }
+    public Vector2 swipeDelta;
 
-    public static event Action<SwipeDirection> Swipe;
-    public bool swiping = false;
-    private bool eventSent = false;
-    private Vector2 lastPosition;
+    public float DecreaseRate;
+    public float Sens;
+    Vector2 iniSwipe;
+    Vector2 newSwipe;
 
     void Update()
     {
-       // Debug.Log(Input.GetTouch(0).deltaPosition.sqrMagnitude);
-        if (CF2Input.touchCount == 0)
-            return;
-
-        if (CF2Input.GetTouch(0).deltaPosition.sqrMagnitude != 0)
+        if(iniSwipe != newSwipe)
         {
-            if (swiping == false)
+            if (iniSwipe != Vector2.zero)
             {
-                swiping = true;
-                lastPosition = CF2Input.GetTouch(0).position;
-                return;
+                swipeDelta = (newSwipe - iniSwipe) * -Sens * Time.deltaTime;
             }
-            else
-            {
-                if (!eventSent)
-                {
-                    if (Swipe != null)
-                    {
-                        Vector2 direction = CF2Input.GetTouch(0).position - lastPosition;
-
-                        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
-                        {
-                            if (direction.x > 0)
-                                Swipe(SwipeDirection.Right);
-                            else
-                                Swipe(SwipeDirection.Left);
-                        }
-                        else
-                        {
-                            if (direction.y > 0)
-                                Swipe(SwipeDirection.Up);
-                            else
-                                Swipe(SwipeDirection.Down);
-                        }
-
-                        eventSent = true;
-                    }
-                }
-            }
+            iniSwipe = newSwipe;
         }
-        else
+
+        
+        float x = 0;
+        float y = 0;
+        if(swipeDelta.x > 0)
         {
-            swiping = false;
-            eventSent = false;
+            x = 1;
         }
+        if (swipeDelta.x < 0)
+        {
+            x = -1;
+        }
+        if (swipeDelta.y > 0)
+        {
+            y = 1;
+        }
+        if (swipeDelta.y < 0)
+        {
+            y = -1;
+        }
+        Vector2 a = new Vector2(x,y);
+
+        swipeDelta -= a * Time.deltaTime * DecreaseRate;
+        
+        if(swipeDelta.magnitude < 0.1f)
+        {
+            swipeDelta = Vector2.zero;
+        }
+
+    }
+    public void SwipeVector(Vector2 swipe)
+    {
+        newSwipe = swipe;
     }
 }
